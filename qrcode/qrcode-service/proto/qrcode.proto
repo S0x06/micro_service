@@ -1,0 +1,19 @@
+syntax = "proto3";
+
+package proto
+
+service QrCode {
+	
+	rpc GetQrCode (QrCodeRequest) returns (QrCodeResponse) {}
+
+}
+
+
+message QrCodeRequest {
+  string In = 1;
+}
+
+
+message QrCodeResponse {
+  string Out = 1;
+}

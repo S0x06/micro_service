@@ -1,4 +1,4 @@
-package service
+package request
 
 import (
 	"context"
@@ -20,7 +20,7 @@ func (e Endpoints) QrCode(ctx context.Context, in *pb.QrCodeRequest) (*pb.EchoRe
 	return response.(*pb.QrCodeResponse), nil
 }
 
-func MakeEchoEndpoint(s pb.QrCodeServer) endpoint.Endpoint {
+func MakeQrCodeEndpoint(s pb.QrCodeServer) endpoint.Endpoint {
 	return func(ctx context.Context, request interface{}) (response interface{}, err error) {
 		req := request.(*pb.QrCodeRequest)
 		v, err := s.QrCode(ctx, req)

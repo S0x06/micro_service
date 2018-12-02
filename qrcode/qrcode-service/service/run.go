@@ -6,6 +6,10 @@ type Config struct {
 	GRPCAddr  string
 }
 
+func NewEndpoints() request.Endpoints {
+
+}
+
 func Run(cfg Config) {
 
 }

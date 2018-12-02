@@ -1,6 +1,6 @@
 syntax = "proto3";
 
-package proto
+package proto;
 
 service QrCode {
 	
@@ -10,7 +10,8 @@ service QrCode {
 
 
 message QrCodeRequest {
-  string In = 1;
+  int64 	height = 1;
+  int64 	width = 2;
 }
 
 

@@ -2,11 +2,10 @@ package main
 
 import (
 	"flag"
-	"github.com/qrcode/qrcode-service/svc"
+	"github.com/qrcode/qrcode-service/service"
 )
 
 func main() {
 
-	svc.Run()
-
+	service.Run()
 }

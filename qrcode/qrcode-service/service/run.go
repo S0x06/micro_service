@@ -1,5 +1,6 @@
-package svc
+package service
 
+/*
 type Config struct {
 	HTTPAddr  string
 	DebugAddr string
@@ -9,7 +10,7 @@ type Config struct {
 func NewEndpoints() request.Endpoints {
 
 }
-
+*/
 func Run(cfg Config) {
 
 }

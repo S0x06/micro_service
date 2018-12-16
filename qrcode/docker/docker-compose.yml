@@ -1,0 +1,140 @@
+version: '2'
+
+networks:
+  front-tier:
+    driver: bridge
+  back-tier:
+    driver: bridge
+
+services:
+  nginx:
+    image: nginx:1.12-alpine
+    volumes:
+      - /docker/data/www/service:/var/www/service
+      - /docker/data/nginx/conf.d:/etc/nginx/conf.d
+    ports:
+      - "80:80"
+    restart: always
+    networks:
+      - back-tier
+    # dns:
+      # - "192.168.1.56"
+
+  consul:
+    image: progrium/consul
+    ports:
+      - "8500:8500"
+    command: -server -bootstrap
+    networks:
+      - back-tier
+
+  zipkin-backend:
+    image: openzipkin/zipkin-elasticsearch:1.17.0
+    container_name: elasticsearch
+    ports:
+      # http
+      - 9200:9200
+    networks:
+      - back-tier
+
+    # The zipkin process services the UI, and also exposes a POST endpoint that
+    # instrumentation can send trace data to. Scribe is enabled by default.
+  zipkin:
+    image: openzipkin/zipkin:1.17.0
+    container_name: zipkin
+    # Environment settings are defined here https://github.com/openzipkin/zipkin/tree/1.17.0/zipkin-server#environment-variables
+    environment:
+      - STORAGE_TYPE=elasticsearch
+      # Point the zipkin at the storage backend
+      - ES_HOSTS=http://elasticsearch:9200
+      # Point the zipkin at the storage backend
+      # - MYSQL_HOST=mysql
+      # Uncomment to disable scribe
+      # - SCRIBE_ENABLED=false
+      # Uncomment to enable self-tracing
+      # - SELF_TRACING_ENABLED=true
+      # Uncomment to enable debug logging
+      # - JAVA_OPTS=-Dlogging.level.zipkin=DEBUG
+    ports:
+      # Listen port for the Scribe transport
+      - 9410:9410
+      # Port used for the Zipkin UI and HTTP Api
+      - 9411:9411
+    depends_on:
+      - zipkin-backend
+    networks:
+      - back-tier
+  dependencies:
+      image: openzipkin/zipkin-dependencies
+      container_name: dependencies
+      entrypoint: crond -f
+      environment:
+        - STORAGE_TYPE=elasticsearch
+        - ES_HOSTS=elasticsearch
+      depends_on:
+        - zipkin-backend
+      networks:
+        - back-tier
+
+  mysql:
+    image: mysql:5.7
+    ports:
+      - 3306:3306
+    environment:
+      MYSQL_ROOT_PASSWORD: 123456
+    volumes:
+      - /docker/data/mysql/:/var/lib/mysql
+    restart: always
+    networks:
+      - back-tier
+  mongo:
+    image: mongo:3.4.4
+    ports:
+      - 27017:27017
+    volumes:
+      - /docker/data/mongo/:/data/db
+    restart: always
+    networks:
+      - back-tier
+  gogs:
+    image: gogs/gogs
+    volumes:
+      - /docker/data/gogs/gogs:/data/gogs
+      - /docker/data/gogs/git:/data/git
+    ports:
+      - "10022:22"
+      - "10080:3000"
+    # dns:
+    #   - "192.168.1.56"
+    restart: always
+    networks:
+      - back-tier
+
+    drone-server:
+      image: drone/drone:0.8.0
+      ports:
+        - 8000:8000
+      volumes:
+        - /var/lib/drone:/var/lib/drone/
+      restart: always
+      environment:
+        - DRONE_OPEN=true
+        - DRONE_HOST=192.168.1.200
+        - DRONE_GOGS=true
+        - DRONE_GOGS_URL=http://192.168.1.200:10080
+        - DRONE_SECRET=3a029f04d76d32e79367c4b3255dda4d
+
+  drone-agent:
+    image: drone/drone:0.8.0
+    command: agent
+    restart: always
+    depends_on:
+      - drone-server
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+    environment:
+      - DRONE_HOST=192.168.1.200
+      - DRONE_GOGS=true
+      - DRONE_GOGS_URL=http://192.168.1.200:10080
+      - DRONE_SERVER=ws://192.168.1.200:8000/ws/broker
+      - DRONE_SECRET=3a029f04d76d32e79367c4b3255dda4d

@@ -1,5 +1,6 @@
 package request
 
+/*
 import (
 	"context"
 	"fmt"
@@ -30,3 +31,4 @@ func MakeQrCodeEndpoint(s pb.QrCodeServer) endpoint.Endpoint {
 		return v, nil
 	}
 }
+*/

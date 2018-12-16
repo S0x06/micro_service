@@ -12,6 +12,8 @@ service QrCode {
 message QrCodeRequest {
   int64 	height = 1;
   int64 	width = 2;
+  string    context = 3
+  string    background = 4
 }
 
 
